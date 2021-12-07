@@ -2,6 +2,7 @@ local cmp = require'cmp'
 
 local NAME_REGEX = '\\%([^/\\\\:\\*?<>\'"`\\|]\\)'
 local PATH_REGEX = vim.regex(([[\%([/"\']PAT\+\)*[/"\']\zePAT*$]]):gsub('PAT', NAME_REGEX))
+local RELATIVE_PATH_REGEX = vim.regex([[\%['"]\./[^'"]*$]])
 
 local source = {}
 
@@ -50,7 +51,8 @@ source._dirname = function(self, params)
   local prefix = string.sub(params.context.cursor_before_line, 1, s + 1) -- include '/'
 
   local buf_dirname = vim.fn.expand(('#%d:p:h'):format(params.context.bufnr))
-  if vim.api.nvim_get_mode().mode == 'c' then
+  local relative = RELATIVE_PATH_REGEX:match_str(params.context.cursor_before_line)
+  if vim.api.nvim_get_mode().mode == 'c' or not relative then
     buf_dirname = vim.fn.getcwd()
   end
   if prefix:match('%.%./$') then
